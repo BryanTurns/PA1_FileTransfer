@@ -320,7 +320,10 @@ int send_data(struct packet *data, char *data_buf, int data_buf_len, int sockfd,
       // Send the data to the server
       n = sendto(sockfd, buf, BUFSIZE, 0, serveraddr, *serverlen);
       if (n < 0) 
-        error("ERROR in sendto");      
+        error("ERROR in sendto");    
+      unpack(buf, data);
+      printf("Sent: \n");
+      printpacket(data);  
       // Set timeout
       timeout->tv_usec = TIMEOUT_U;
       timeout->tv_sec = TIMEOUT_S;
