@@ -119,19 +119,21 @@ int main(int argc, char **argv) {
     /* 
      * gethostbyaddr: determine who sent the datagram
      */
-    hostp = gethostbyaddr((const char *)&clientaddr.sin_addr.s_addr, 
-			  sizeof(clientaddr.sin_addr.s_addr), AF_INET);
-    if (hostp == NULL)
-      error("ERROR on gethostbyaddr");
-    hostaddrp = inet_ntoa(clientaddr.sin_addr);
-    if (hostaddrp == NULL)
-      error("ERROR on inet_ntoa\n");
-    printf("server received datagram from %s (%s)\n", 
-	   hostp->h_name, hostaddrp);
-    printf("server received %d bytes: %s\n", n, buf);
+    // hostp = gethostbyaddr((const char *)&clientaddr.sin_addr.s_addr, 
+		// 	  sizeof(clientaddr.sin_addr.s_addr), AF_INET);
+    // char client_ip[INET_ADDRSTRLEN];
+    // inet_ntop(AF_INET, &(clientaddr.sin_addr), client_ip, INET_ADDRSTRLEN);
+    // inet_pton(AF_INET, client_ip, hostp);
+    // if (hostp == NULL)
+    //   error("ERROR on gethostbyaddr");
+    // hostaddrp = inet_ntoa(clientaddr.sin_addr);
+    // if (hostaddrp == NULL)
+    //   error("ERROR on inet_ntoa\n");
+    // printf("server received datagram from %s (%s)\n", 
+	  //  hostp->h_name, hostaddrp);
+    // printf("server received %d bytes: %s\n", n, buf);
     // Extract buf into data
     unpack(buf, data); 
-    // printpacket(data);
     // Extract the parts of the command
     char *cmd[2];
     cmd[0] = strtok(data->payload, " ");
@@ -183,60 +185,42 @@ int main(int argc, char **argv) {
       }
       send_data(data, res, strlen(res)+1, sockfd, &clientaddr, &clientlen, &timeout, err);
     }
-    else if (strcmp(cmd[0], "put") == 0) {
-      printf("PUT\n");
-      
-      printf("CMD[1]: %s\n", cmd[1]);
+    else if (strcmp(cmd[0], "put") == 0) {      
       acknowledge(sockfd, &clientaddr, clientlen, 0);
       if (cmd[1][strlen(cmd[1])-1] == '\n')
         cmd[1][strlen(cmd[1])-1] = '\0';
       
-      // cmd[1][strlen(cmd[1])-1] = '\0';
 
       int n_packets = 2, n = 0;
       char *res;
 
       // Open the file
-      printf("OPENING FILE\n");
       FILE *fptr = fopen(cmd[1], "wb+");
       if (!fptr) {
         printf("Could not open file\n");
         continue;
       }
       // Wait for first data packet
-      printf("Recieving data\n");
-      // Maybe timeout?
       recvfrom(sockfd, buf, BUFSIZE, 0, &clientaddr, &clientlen);
-      printf("Sending ack\n");
       acknowledge(sockfd, &clientaddr, clientlen, 0);
-      printf("unpacking data\n");
       unpack(buf, data);
       n_packets = data->seqlen;
-      printf("SEQLEN: %d\n", n_packets);
-      printf("writing data\n");
       n = fwrite(data->payload, sizeof(char), data->payloadlen, fptr);
-      printf("%d bytes written\n", n);
 
       // Write the  packets in
       for (int i = 1; i < n_packets; i++) {
         // consider adding timeout?
         recvfrom(sockfd, buf, BUFSIZE, 0, &clientaddr, &clientlen);
-        printf("RECIEVED!\n");
-        printf("Attempting to acknowledge packet\n");
         acknowledge(sockfd, &clientaddr, clientlen, 0);
-        printf("Attempting to unpack packet\n");
         unpack(buf, data);
-        printf("Attempting to print packet\n");
-        printpacket(data);
         n = fwrite(data->payload, sizeof(char), data->payloadlen, fptr);
-        printf("%d bytes written\n", n);
         if (n < 0) {
           printf("File I/O failed\n");
           break;
         }
       }
-      printf("closing file\n");
       fclose(fptr);
+      printf("File Transfered to Server\n");
     }
     else if (strcmp(cmd[0], "get") == 0) {
       acknowledge(sockfd, &clientaddr, clientlen, 0);
@@ -287,6 +271,7 @@ int main(int argc, char **argv) {
           continue;
         }
     }
+    fclose(fptr);
   }
 }}
 
@@ -420,7 +405,6 @@ int send_packet(struct packet *data, char *lsdjkdfj, int buf_len, int sockfd, st
   char buf[BUFSIZE];
   int fail_count = 0, n = 0, success = 0;
   pack(buf, data);
-  // printpacket(data);
   // Track whether the packet gets acknowledged
   fail_count = 0;
   success = 0;
@@ -454,7 +438,6 @@ int send_packet(struct packet *data, char *lsdjkdfj, int buf_len, int sockfd, st
       error("ERROR in recvfrom");
     // extract buf into data
     unpack(buf, data);
-    // printpacket(data);
     // If the payloadlen = 0 it is an ack packet so the server recieved our msg
     if (data->payloadlen == 0 && data->errcode == 0) {
       success = 1;
@@ -471,6 +454,7 @@ int send_packet(struct packet *data, char *lsdjkdfj, int buf_len, int sockfd, st
     printf("Failed to recieve acknowledgment\n");
     return 1;
   }
+
 }
 
 void clearbuf(char *buf, int len) {

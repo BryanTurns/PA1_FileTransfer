@@ -116,6 +116,7 @@ int main(int argc, char **argv) {
       serverlen = sizeof(serveraddr);
       if(!send_data(data, cmds[0], strlen(cmds[0])+1, sockfd, &serveraddr, &serverlen, &timeout, 0)) {
         free(data);
+        printf("Server acknowledged exit\n");
         exit(0);
       }
       printf("Exit failed\n");
@@ -230,7 +231,7 @@ int main(int argc, char **argv) {
         }
         
       }
-      
+      printf("File sent to server\n");
 
 
 
@@ -282,6 +283,7 @@ int main(int argc, char **argv) {
       }
 
       fclose(fptr);
+       printf("File Recieved\n");
     }
     else 
       printf("Command not recognized\n");
