@@ -454,6 +454,7 @@ int send_data(struct packet *data, char *data_buf, int data_buf_len, int sockfd,
       // Check if ack recieved in time
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
         fail_count++;
+        printf("HERE\n");
         continue;
       }
       // Check if ack recieved at all
