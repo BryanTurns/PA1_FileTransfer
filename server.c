@@ -115,23 +115,7 @@ int main(int argc, char **argv) {
 		 (struct sockaddr *) &clientaddr, &clientlen);
     if (n < 0)
       error("ERROR in recvfrom");
-    // printf("RECIEVED\n");
-    /* 
-     * gethostbyaddr: determine who sent the datagram
-     */
-    // hostp = gethostbyaddr((const char *)&clientaddr.sin_addr.s_addr, 
-		// 	  sizeof(clientaddr.sin_addr.s_addr), AF_INET);
-    // char client_ip[INET_ADDRSTRLEN];
-    // inet_ntop(AF_INET, &(clientaddr.sin_addr), client_ip, INET_ADDRSTRLEN);
-    // inet_pton(AF_INET, client_ip, hostp);
-    // if (hostp == NULL)
-    //   error("ERROR on gethostbyaddr");
-    // hostaddrp = inet_ntoa(clientaddr.sin_addr);
-    // if (hostaddrp == NULL)
-    //   error("ERROR on inet_ntoa\n");
-    // printf("server received datagram from %s (%s)\n", 
-	  //  hostp->h_name, hostaddrp);
-    // printf("server received %d bytes: %s\n", n, buf);
+    printf("Recieved request\n");
     // Extract buf into data
     unpack(buf, data); 
     // Extract the parts of the command
@@ -175,7 +159,6 @@ int main(int argc, char **argv) {
       acknowledge(sockfd, &clientaddr, clientlen, 0);
       int err = 0;
       char *res;
-      // printf("cmd1: %s\n", cmd[1]);
       cmd[1][strlen(cmd[1])-1] = '\0';
       if (remove(cmd[1]) == 0) 
         res = "Successfully deleted.";
@@ -262,10 +245,10 @@ int main(int argc, char **argv) {
         data->errcode = 0;
         data->seqlen = num_packets;
         data->seqnum = i;
-        
         for (int j = 0; j < strlen(send_buf)+1; j++) {
           data->payload[j] = send_buf[j];
         }
+        // Send packet
         if (send_packet(data, send_buf, 0, sockfd, &clientaddr, &clientlen, &timeout, 0)) {
           printf("Unable to send data\n");
           continue;
