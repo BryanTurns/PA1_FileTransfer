@@ -115,9 +115,10 @@ int main(int argc, char **argv) {
 		 (struct sockaddr *) &clientaddr, &clientlen);
     if (n < 0)
       error("ERROR in recvfrom");
-    printf("Recieved request\n");
+    
     // Extract buf into data
     unpack(buf, data); 
+    printf("Recieved request: %s\n", data->payload);
     // Extract the parts of the command
     char *cmd[2];
     cmd[0] = strtok(data->payload, " ");
